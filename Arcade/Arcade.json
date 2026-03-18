@@ -2,7 +2,7 @@
   "Author": "ThePurplePigeon",
   "Name": "Arcade",
   "Punchline": "Mini-games for Dalamud in one window.",
-  "Description": "Play Minesweeper, Hangman, and Sudoku from a single Arcade hub. Commands: /arcade (primary), /pmycommand (legacy alias).",
+  "Description": "Play Minesweeper, Hangman, and Sudoku from a single Arcade hub.",
   "ApplicableVersion": "any",
   "Tags": [
     "arcade",
