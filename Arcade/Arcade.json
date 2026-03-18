@@ -3,6 +3,7 @@
   "Name": "Arcade",
   "Punchline": "Mini-games for Dalamud in one window.",
   "Description": "Play Minesweeper, Hangman, and Sudoku from a single Arcade hub.",
+  "IconUrl": "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/Data/Arcade_Logo.png",
   "ApplicableVersion": "any",
   "Tags": [
     "arcade",
