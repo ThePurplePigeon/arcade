@@ -48,7 +48,6 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Separator();
         ImGui.TextDisabled("Commands");
         ImGui.BulletText($"{PluginCommands.Primary} - Toggle Arcade main window");
-        ImGui.BulletText($"{PluginCommands.LegacyAlias} - Legacy alias");
 
         ImGui.Separator();
         ImGui.TextDisabled("Gameplay defaults are configured inside each game module.");

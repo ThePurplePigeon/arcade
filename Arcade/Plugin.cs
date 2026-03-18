@@ -50,11 +50,6 @@ public sealed class Plugin : IDalamudPlugin
             HelpMessage = "Open or close the Arcade window."
         });
 
-        CommandManager.AddHandler(PluginCommands.LegacyAlias, new CommandInfo(OnCommand)
-        {
-            HelpMessage = "Legacy alias for /arcade."
-        });
-
         PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
@@ -75,7 +70,6 @@ public sealed class Plugin : IDalamudPlugin
         MainWindow.Dispose();
 
         CommandManager.RemoveHandler(PluginCommands.Primary);
-        CommandManager.RemoveHandler(PluginCommands.LegacyAlias);
     }
 
     private void OnCommand(string command, string args)
