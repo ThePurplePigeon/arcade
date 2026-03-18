@@ -13,7 +13,7 @@
     "IsTestingExclusive": false,
     "DownloadLinkInstall": "https://github.com/ThePurplePigeon/arcade-test/releases/latest/download/Arcade.zip",
     "DownloadLinkUpdate": "https://github.com/ThePurplePigeon/arcade-test/releases/latest/download/Arcade.zip",
-    "LastUpdate": "1773876973",
-    "IconUrl": "https://raw.githubusercontent.com/ThePurplePigeon/arcade-test/master/Data/Arcade_Logo.png"
+    "LastUpdate": "1773877762",
+    "IconUrl": "https://cdn.jsdelivr.net/gh/ThePurplePigeon/arcade-test@master/Data/Arcade_Logo.png?v=1773877762"
   }
 ]
