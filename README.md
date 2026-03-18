@@ -6,7 +6,7 @@ Arcade is a Dalamud plugin that bundles several mini-games into one window:
 - Hangman
 - Sudoku
 
-The plugin command is `/arcade`. A legacy alias `/pmycommand` is still supported.
+The plugin command is `/arcade`.
 
 ## Requirements
 
@@ -43,7 +43,6 @@ The plugin output is at:
 - `Arcade/`: plugin runtime code (windows, modules, game logic)
 - `Arcade.Tests/`: automated tests
 - `Data/`: data files used by Hangman and Sudoku providers
-- `docs/`: development checklists and notes
 
 ## Notes For Contributors
 
