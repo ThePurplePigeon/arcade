@@ -2,7 +2,7 @@
 <Project Sdk="Dalamud.NET.Sdk/14.0.1">
   <PropertyGroup>
     <Version>0.1.0</Version>
-    <PackageProjectUrl>https://github.com/ThePurplePigeon/arcade-test</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/ThePurplePigeon/arcade</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
