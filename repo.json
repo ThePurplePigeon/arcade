@@ -11,9 +11,9 @@
     "Punchline": "Mini-games for Dalamud in one window.",
     "IsHide": false,
     "IsTestingExclusive": false,
-    "DownloadLinkInstall": "https://github.com/ThePurplePigeon/arcade/releases/latest/download/Arcade.zip",
-    "DownloadLinkUpdate": "https://github.com/ThePurplePigeon/arcade/releases/latest/download/Arcade.zip",
-    "LastUpdate": "1773878081",
+    "DownloadLinkInstall": "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/dist/Arcade.zip",
+    "DownloadLinkUpdate": "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/dist/Arcade.zip",
+    "LastUpdate": "1773964357",
     "IconUrl": "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/Data/Arcade_Logo.png",
     "ImageUrls": [
       "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/Data/Arcade_Logo.png"
