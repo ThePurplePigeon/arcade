@@ -1,22 +1,22 @@
 [
-  {
-    "Author": "ThePurplePigeon",
-    "Name": "Arcade",
-    "InternalName": "Arcade",
-    "AssemblyVersion": "0.1.0.0",
-    "Description": "Play Minesweeper, Hangman, and Sudoku from a single Arcade hub.",
-    "ApplicableVersion": "any",
-    "RepoUrl": "https://github.com/ThePurplePigeon/arcade",
-    "DalamudApiLevel": 14,
-    "Punchline": "Mini-games for Dalamud in one window.",
-    "IsHide": false,
-    "IsTestingExclusive": false,
-    "DownloadLinkInstall": "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/dist/Arcade.zip",
-    "DownloadLinkUpdate": "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/dist/Arcade.zip",
-    "LastUpdate": "1773964357",
-    "IconUrl": "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/Data/Arcade_Logo.png",
-    "ImageUrls": [
-      "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/Data/Arcade_Logo.png"
-    ]
-  }
+    {
+        "Author":  "ThePurplePigeon",
+        "Name":  "Arcade",
+        "InternalName":  "Arcade",
+        "AssemblyVersion":  "0.1.1.0",
+        "Description":  "Play Minesweeper, Hangman, and Sudoku from a single Arcade hub.",
+        "ApplicableVersion":  "any",
+        "RepoUrl":  "https://github.com/ThePurplePigeon/arcade",
+        "DalamudApiLevel":  14,
+        "Punchline":  "Mini-games for Dalamud in one window.",
+        "IsHide":  false,
+        "IsTestingExclusive":  false,
+        "DownloadLinkInstall":  "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/dist/Arcade.zip",
+        "DownloadLinkUpdate":  "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/dist/Arcade.zip",
+        "LastUpdate":  "1773967271",
+        "IconUrl":  "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/Data/Arcade_Logo.png",
+        "ImageUrls":  [
+                          "https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/Data/Arcade_Logo.png"
+                      ]
+    }
 ]

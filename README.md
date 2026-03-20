@@ -30,6 +30,18 @@ The plugin output is at:
 - `Arcade\bin\x64\Debug\Arcade.dll` for Debug builds
 - `Arcade\bin\x64\Release\Arcade.dll` for Release builds
 
+## Custom Repo Release
+
+To publish a custom-repo-ready package (Release build + tests + `dist/Arcade.zip` + `repo.json` metadata sync), run:
+
+```powershell
+.\scripts\Publish-CustomRepo.ps1
+```
+
+Custom repo URL:
+
+- `https://raw.githubusercontent.com/ThePurplePigeon/arcade/master/repo.json`
+
 ## Enable In Game
 
 1. Open Dalamud settings with `/xlsettings`.
