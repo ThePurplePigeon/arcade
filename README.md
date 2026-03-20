@@ -61,6 +61,7 @@ Custom repo URL:
 - Keep data files clean and conflict free. `DataFileValidationTests` enforces this.
 - If you add words or puzzles, run `dotnet test .\Arcade.sln -v minimal` before committing.
 - CI runs restore, build, and test on pull requests via `.github/workflows/pr-build.yml`.
+- Contributor workflow and branch naming guidance lives in `CONTRIBUTING.md`.
 
 ## References
 

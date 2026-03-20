@@ -1,12 +1,19 @@
-name: Arcade PR Builder
+name: Arcade CI
 
 on:
   pull_request:
     branches: [ master ]
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: windows-2022
+    timeout-minutes: 20
 
     steps:
     - name: Checkout
