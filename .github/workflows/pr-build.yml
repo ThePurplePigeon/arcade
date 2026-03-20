@@ -39,7 +39,7 @@ jobs:
       run: dotnet test .\Arcade.sln --configuration Release --no-build -v minimal
 
     - name: Store artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Arcade
         path: .\Arcade\bin\x64\Release\*
