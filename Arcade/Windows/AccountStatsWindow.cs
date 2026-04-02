@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Arcade.Stats;
+using Arcade.Ui;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
 
@@ -25,6 +26,13 @@ public sealed class AccountStatsWindow : Window, IDisposable
     public override void Draw()
     {
         var stats = accountStatsService.GetSnapshot();
+        ImGui.Text("Account Stats");
+        ArcadeUi.DrawCompactStatusRow(
+            ("Hangman", stats.Hangman.RoundsPlayed.ToString()),
+            ("Minesweeper", stats.Minesweeper.GamesPlayed.ToString()),
+            ("Sudoku", stats.Sudoku.PuzzlesPlayed.ToString()));
+        ArcadeUi.DrawSecondaryText("Expand a section for detailed game-specific stats.");
+        ImGui.Separator();
 
         if (ImGui.CollapsingHeader("Hangman", ImGuiTreeNodeFlags.DefaultOpen))
         {
@@ -46,19 +54,23 @@ public sealed class AccountStatsWindow : Window, IDisposable
     {
         if (stats.RoundsPlayed == 0)
         {
-            ImGui.TextDisabled("No data yet.");
+            ArcadeUi.DrawSecondaryText("No data yet.");
             return;
         }
 
-        ImGui.Text($"Rounds: {stats.RoundsPlayed}");
-        ImGui.Text($"Wins / Losses: {stats.Wins} / {stats.Losses}");
-        ImGui.Text($"Win Rate: {FormatPercent(stats.Wins, stats.RoundsPlayed)}");
-        ImGui.Text($"Best Streak: {stats.BestWinStreak}");
+        ArcadeUi.DrawCompactStatusRow(
+            ("Rounds", stats.RoundsPlayed.ToString()),
+            ("W/L", $"{stats.Wins}/{stats.Losses}"),
+            ("Win Rate", FormatPercent(stats.Wins, stats.RoundsPlayed)),
+            ("Best Streak", stats.BestWinStreak.ToString()));
+
+        ArcadeUi.DrawSecondaryText("Performance");
         ImGui.Text($"Total Wrong Guesses: {stats.TotalWrongGuesses}");
         ImGui.Text($"Avg Wrong / Round: {FormatAverage(HangmanStatsMath.GetAverageWrongGuessesPerRound(stats))}");
         ImGui.Text($"Avg Wrong / Win: {FormatAverage(HangmanStatsMath.GetAverageWrongGuessesOnWins(stats))}");
+
         ImGui.Separator();
-        ImGui.TextDisabled("Rounds By Difficulty");
+        ArcadeUi.DrawSecondaryText("Rounds By Difficulty");
         ImGui.Text($"Any: {stats.AnyRoundsPlayed}");
         ImGui.Text($"Easy: {stats.EasyRoundsPlayed}");
         ImGui.Text($"Medium: {stats.MediumRoundsPlayed}");
@@ -69,13 +81,15 @@ public sealed class AccountStatsWindow : Window, IDisposable
     {
         if (stats.GamesPlayed == 0)
         {
-            ImGui.TextDisabled("No data yet.");
+            ArcadeUi.DrawSecondaryText("No data yet.");
             return;
         }
 
-        ImGui.Text($"Games: {stats.GamesPlayed}");
-        ImGui.Text($"Wins / Losses: {stats.Wins} / {stats.Losses}");
-        ImGui.Text($"Win Rate: {FormatPercent(stats.Wins, stats.GamesPlayed)}");
+        ArcadeUi.DrawCompactStatusRow(
+            ("Games", stats.GamesPlayed.ToString()),
+            ("W/L", $"{stats.Wins}/{stats.Losses}"),
+            ("Win Rate", FormatPercent(stats.Wins, stats.GamesPlayed)));
+
         if (stats.BestWinSeconds.HasValue)
         {
             ImGui.Text($"Fastest Win: {TimeText.FormatElapsedCompact(TimeSpan.FromSeconds(stats.BestWinSeconds.Value))}");
@@ -90,19 +104,23 @@ public sealed class AccountStatsWindow : Window, IDisposable
     {
         if (stats.PuzzlesPlayed == 0)
         {
-            ImGui.TextDisabled("No data yet.");
+            ArcadeUi.DrawSecondaryText("No data yet.");
             return;
         }
 
-        ImGui.Text($"Puzzles: {stats.PuzzlesPlayed}");
-        ImGui.Text($"Completed / Abandoned: {stats.Completed} / {stats.Abandoned}");
-        ImGui.Text($"Completion Rate: {FormatPercent(stats.Completed, stats.PuzzlesPlayed)}");
+        ArcadeUi.DrawCompactStatusRow(
+            ("Puzzles", stats.PuzzlesPlayed.ToString()),
+            ("Completed", stats.Completed.ToString()),
+            ("Abandoned", stats.Abandoned.ToString()),
+            ("Completion", FormatPercent(stats.Completed, stats.PuzzlesPlayed)));
+
         ImGui.Separator();
-        ImGui.TextDisabled("Completed By Difficulty");
+        ArcadeUi.DrawSecondaryText("Completed By Difficulty");
         ImGui.Text($"Easy: {stats.EasyCompleted}");
         ImGui.Text($"Medium: {stats.MediumCompleted}");
         ImGui.Text($"Hard: {stats.HardCompleted}");
         ImGui.Separator();
+        ArcadeUi.DrawSecondaryText("Best Completion Times");
         ImGui.Text($"Best Easy: {FormatNullableDuration(stats.BestEasyCompletionSeconds)}");
         ImGui.Text($"Best Medium: {FormatNullableDuration(stats.BestMediumCompletionSeconds)}");
         ImGui.Text($"Best Hard: {FormatNullableDuration(stats.BestHardCompletionSeconds)}");

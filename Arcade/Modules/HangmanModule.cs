@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Text;
 using Arcade.Games.Hangman;
 using Arcade.Stats;
+using Arcade.Ui;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 
@@ -14,6 +15,7 @@ public sealed class HangmanModule : IArcadeModule
     private const float MaxLayoutWidth = 760.0f;
     private const float MaxGuessPanelWidth = 700.0f;
     private const float MaxGallowsPanelWidth = 520.0f;
+    private const float DifficultyComboWidth = 140.0f;
     private const float KeyboardButtonSize = 28.0f;
     private static readonly string[] KeyboardRows = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
     private static readonly string[] LetterLabels = BuildLetterLabels();
@@ -80,28 +82,29 @@ public sealed class HangmanModule : IArcadeModule
             return;
         }
 
-        ImGui.Text("Hangman");
         DrawTopControls();
-        ImGui.Spacing();
         DrawStatusRows();
         ImGui.Separator();
         DrawGuessField();
         ImGui.Spacing();
         DrawRoundRecapAndFeedback();
-        ImGui.Spacing();
-        DrawGuessedLetterSummary();
         ImGui.Separator();
         DrawGallowsPanel();
         ImGui.Spacing();
         DrawKeyboard();
+        ImGui.Spacing();
+        DrawGuessedLetterSummary();
+        ArcadeUi.DrawSecondaryText("Click letters to guess. Green letters are correct, red letters are wrong.");
     }
 
     private void DrawTopControls()
     {
+        ImGui.Text("Hangman");
+        ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         ImGui.TextDisabled("Difficulty");
         ImGui.SameLine();
-        ImGui.SetNextItemWidth(150.0f);
+        ImGui.SetNextItemWidth(DifficultyComboWidth);
 
         var selected = game.SelectedDifficulty;
         if (ImGui.BeginCombo("##HangmanDifficulty", FormatDifficulty(selected)))
@@ -137,26 +140,14 @@ public sealed class HangmanModule : IArcadeModule
 
     private void DrawStatusRows()
     {
-        DrawInlineStat("Round", game.RoundNumber.ToString());
-        ImGui.SameLine();
-        DrawInlineSeparator();
-        ImGui.SameLine();
-        DrawInlineStat("State", FormatState(game.State));
-        ImGui.SameLine();
-        DrawInlineSeparator();
-        ImGui.SameLine();
-        DrawInlineStat("Remaining", $"{game.RemainingGuesses}/{game.Settings.MaxWrongGuesses}");
-
         var stats = game.SessionStats;
-        DrawInlineStat("Session", $"{stats.Wins}W / {stats.Losses}L");
-        ImGui.SameLine();
-        DrawInlineSeparator();
-        ImGui.SameLine();
-        DrawInlineStat("Streak", stats.CurrentWinStreak.ToString());
-        ImGui.SameLine();
-        DrawInlineSeparator();
-        ImGui.SameLine();
-        DrawInlineStat("Best", stats.BestWinStreak.ToString());
+        ArcadeUi.DrawCompactStatusRow(
+            ("Round", game.RoundNumber.ToString()),
+            ("State", FormatState(game.State)),
+            ("Remaining", $"{game.RemainingGuesses}/{game.Settings.MaxWrongGuesses}"),
+            ("Session", $"{stats.Wins}W/{stats.Losses}L"),
+            ("Streak", stats.CurrentWinStreak.ToString()),
+            ("Best", stats.BestWinStreak.ToString()));
     }
 
     private void DrawRoundRecapAndFeedback()
@@ -208,9 +199,8 @@ public sealed class HangmanModule : IArcadeModule
 
     private void DrawGuessedLetterSummary()
     {
-        ImGui.TextDisabled("Guessed Letters");
-        ImGui.Text($"Correct: {BuildLetterSummary(includeWrongLetters: false)}");
-        ImGui.Text($"Wrong: {BuildLetterSummary(includeWrongLetters: true)}");
+        ArcadeUi.DrawSecondaryText($"Correct: {BuildLetterSummary(includeWrongLetters: false)}");
+        ArcadeUi.DrawSecondaryText($"Wrong: {BuildLetterSummary(includeWrongLetters: true)}");
     }
 
     private void DrawGuessField()
@@ -503,18 +493,6 @@ public sealed class HangmanModule : IArcadeModule
         cachedGuessWidth = availableWidth;
         cachedGuessLayout = HangmanGuessLayoutHelper.Build(display, availableWidth);
         return cachedGuessLayout;
-    }
-
-    private static void DrawInlineStat(string label, string value)
-    {
-        ImGui.TextDisabled($"{label}:");
-        ImGui.SameLine();
-        ImGui.TextUnformatted(value);
-    }
-
-    private static void DrawInlineSeparator()
-    {
-        ImGui.TextDisabled("|");
     }
 
     private static string FormatDifficulty(HangmanDifficulty difficulty)

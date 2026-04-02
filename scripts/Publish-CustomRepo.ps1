@@ -25,13 +25,12 @@ $releaseOutputDirectory = Join-Path $repoRoot "Arcade\\bin\\x64\\Release"
 $repoManifestPath = Join-Path $repoRoot "repo.json"
 $distDirectory = Join-Path $repoRoot "dist"
 $packagePath = Join-Path $distDirectory "Arcade.zip"
-$requiredPackageFiles = @(
+$corePackageFiles = @(
     "Arcade.deps.json",
     "Arcade.dll",
-    "Arcade.json",
-    "hangman_words.txt",
-    "sudoku_puzzles.txt"
+    "Arcade.json"
 )
+$excludedPackageExtensions = @(".pdb", ".xml")
 
 $ownerAndRepo = "ThePurplePigeon/arcade"
 $rawRoot = "https://raw.githubusercontent.com/$ownerAndRepo/master"
@@ -52,16 +51,25 @@ if (-not (Test-Path -Path $releaseOutputDirectory -PathType Container))
     throw "Release output directory not found: $releaseOutputDirectory"
 }
 
-$packageSources = New-Object System.Collections.Generic.List[string]
-foreach ($fileName in $requiredPackageFiles)
+foreach ($fileName in $corePackageFiles)
 {
     $filePath = Join-Path $releaseOutputDirectory $fileName
     if (-not (Test-Path -Path $filePath -PathType Leaf))
     {
-        throw "Required package file missing: $filePath"
+        throw "Core package file missing: $filePath"
     }
+}
 
-    $packageSources.Add($filePath)
+$packageSourceFiles = @(
+    Get-ChildItem -Path $releaseOutputDirectory -File | Where-Object {
+        $extension = $_.Extension.ToLowerInvariant()
+        $excludedPackageExtensions -notcontains $extension
+    }
+)
+
+if ($packageSourceFiles.Count -lt 1)
+{
+    throw "No package source files found in release output: $releaseOutputDirectory"
 }
 
 Write-Host "==> Package dist/Arcade.zip"
@@ -71,7 +79,8 @@ if (Test-Path -Path $packagePath -PathType Leaf)
     Remove-Item -Path $packagePath -Force
 }
 
-Compress-Archive -Path $packageSources.ToArray() -DestinationPath $packagePath -CompressionLevel Optimal
+Compress-Archive -Path @($packageSourceFiles | ForEach-Object { $_.FullName }) -DestinationPath $packagePath -CompressionLevel Optimal
+Write-Host ("Packaged files: " + ($packageSourceFiles.Name -join ", "))
 
 $builtManifestPath = Join-Path $releaseOutputDirectory "Arcade.json"
 $builtManifest = Get-Content -Path $builtManifestPath -Raw | ConvertFrom-Json

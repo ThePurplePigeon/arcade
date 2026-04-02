@@ -3,6 +3,7 @@ using System.IO;
 using System.Numerics;
 using Arcade.Games.Sudoku;
 using Arcade.Stats;
+using Arcade.Ui;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 
@@ -16,6 +17,7 @@ public sealed class SudokuModule : IArcadeModule
     private const float MinCellSize = 30.0f;
     private const float MaxCellSize = 56.0f;
     private const float DigitButtonSize = 34.0f;
+    private const float DifficultyComboWidth = 140.0f;
 
     private static readonly string[] DigitLabels = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
     private static readonly SudokuDifficulty[] DifficultyOptions =
@@ -75,9 +77,7 @@ public sealed class SudokuModule : IArcadeModule
             return;
         }
 
-        ImGui.Text("Sudoku");
         DrawTopControls();
-        ImGui.Spacing();
         DrawStatusRows();
 
         if (game.State == SudokuGameState.Completed)
@@ -94,10 +94,12 @@ public sealed class SudokuModule : IArcadeModule
 
     private void DrawTopControls()
     {
+        ImGui.Text("Sudoku");
+        ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         ImGui.TextDisabled("Difficulty");
         ImGui.SameLine();
-        ImGui.SetNextItemWidth(150.0f);
+        ImGui.SetNextItemWidth(DifficultyComboWidth);
 
         if (ImGui.BeginCombo("##SudokuDifficulty", FormatDifficulty(game.SelectedDifficulty)))
         {
@@ -137,28 +139,16 @@ public sealed class SudokuModule : IArcadeModule
 
     private void DrawStatusRows()
     {
-        DrawInlineStat("State", FormatState(game.State));
-        ImGui.SameLine();
-        DrawInlineSeparator();
-        ImGui.SameLine();
-        DrawInlineStat("Puzzle", FormatDifficulty(game.CurrentPuzzle.Difficulty));
-        ImGui.SameLine();
-        DrawInlineSeparator();
-        ImGui.SameLine();
-        DrawInlineStat("Time", TimeText.FormatElapsedCompact(game.Elapsed));
-        ImGui.SameLine();
-        DrawInlineSeparator();
-        ImGui.SameLine();
-        DrawInlineStat("Filled", $"{game.Analysis.FilledCellCount}/81");
-
         var selectionText = selectedCell.HasValue
             ? $"R{selectedCell.Value.Row + 1} C{selectedCell.Value.Column + 1}"
             : "-";
-        DrawInlineStat("Selected", selectionText);
-        ImGui.SameLine();
-        DrawInlineSeparator();
-        ImGui.SameLine();
-        DrawInlineStat("Mode", noteMode ? "Notes" : "Values");
+        ArcadeUi.DrawCompactStatusRow(
+            ("State", FormatState(game.State)),
+            ("Puzzle", FormatDifficulty(game.CurrentPuzzle.Difficulty)),
+            ("Time", TimeText.FormatElapsedCompact(game.Elapsed)),
+            ("Filled", $"{game.Analysis.FilledCellCount}/81"),
+            ("Selected", selectionText),
+            ("Mode", noteMode ? "Notes" : "Values"));
     }
 
     private void DrawCompletionBanner()
@@ -378,14 +368,14 @@ public sealed class SudokuModule : IArcadeModule
         if (selectedCell.HasValue)
         {
             var selection = selectedCell.Value;
-            ImGui.TextDisabled(
+            ArcadeUi.DrawSecondaryText(
                 canEditSelected
                     ? $"Selected cell: R{selection.Row + 1} C{selection.Column + 1}"
                     : $"Selected cell: R{selection.Row + 1} C{selection.Column + 1} (given)");
         }
         else
         {
-            ImGui.TextDisabled("Select a cell to enter values or notes.");
+            ArcadeUi.DrawSecondaryText("Select a cell to enter values or notes.");
         }
     }
 
@@ -577,18 +567,6 @@ public sealed class SudokuModule : IArcadeModule
         return selected.Row == candidate.Row
             || selected.Column == candidate.Column
             || ((selected.Row / 3) == (candidate.Row / 3) && (selected.Column / 3) == (candidate.Column / 3));
-    }
-
-    private static void DrawInlineStat(string label, string value)
-    {
-        ImGui.TextDisabled($"{label}:");
-        ImGui.SameLine();
-        ImGui.TextUnformatted(value);
-    }
-
-    private static void DrawInlineSeparator()
-    {
-        ImGui.TextDisabled("|");
     }
 
     private static string FormatDifficulty(SudokuDifficulty difficulty)

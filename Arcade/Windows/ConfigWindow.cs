@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using Arcade.Games.Hangman;
 using Arcade.Games.Sudoku;
+using Arcade.Ui;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
 
@@ -54,7 +55,14 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        ImGui.TextDisabled("General");
+        ImGui.Text("Arcade Settings");
+        ArcadeUi.DrawCompactStatusRow(
+            ("Movable", configuration.IsConfigWindowMovable ? "Yes" : "No"),
+            ("Hangman Default", FormatHangmanDifficulty(configuration.DefaultHangmanDifficulty)),
+            ("Sudoku Default", FormatSudokuDifficulty(configuration.DefaultSudokuDifficulty)));
+
+        ImGui.Separator();
+        ArcadeUi.DrawSectionLabel("General");
 
         var movable = configuration.IsConfigWindowMovable;
         if (ImGui.Checkbox("Allow moving this settings window", ref movable))
@@ -64,13 +72,13 @@ public class ConfigWindow : Window, IDisposable
         }
 
         ImGui.Separator();
-        ImGui.TextDisabled("Game Defaults");
+        ArcadeUi.DrawSectionLabel("Game Defaults");
         DrawDefaultHangmanDifficulty();
         DrawDefaultSudokuDifficulty();
 
         ImGui.Separator();
-        ImGui.TextDisabled("Commands");
-        ImGui.BulletText($"{PluginCommands.Primary} - Toggle Arcade main window");
+        ArcadeUi.DrawSectionLabel("Commands");
+        ArcadeUi.DrawSecondaryText($"{PluginCommands.Primary} toggles the Arcade main window.");
     }
 
     private void DrawDefaultHangmanDifficulty()

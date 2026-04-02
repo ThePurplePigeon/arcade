@@ -10,13 +10,12 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $releaseOutputDirectory = Join-Path $repoRoot "Arcade\bin\x64\Release"
 $repoManifestPath = Join-Path $repoRoot "repo.json"
 $distPackagePath = Join-Path $repoRoot "dist\Arcade.zip"
-$requiredPackageFiles = @(
+$corePackageFiles = @(
     "Arcade.deps.json",
     "Arcade.dll",
-    "Arcade.json",
-    "hangman_words.txt",
-    "sudoku_puzzles.txt"
+    "Arcade.json"
 )
+$excludedPackageExtensions = @(".pdb", ".xml")
 
 function Assert-EqualValue
 {
@@ -40,13 +39,25 @@ if (-not (Test-Path -Path $releaseOutputDirectory -PathType Container))
     throw "Release output directory not found: $releaseOutputDirectory"
 }
 
-foreach ($fileName in $requiredPackageFiles)
+foreach ($fileName in $corePackageFiles)
 {
     $filePath = Join-Path $releaseOutputDirectory $fileName
     if (-not (Test-Path -Path $filePath -PathType Leaf))
     {
-        throw "Release output is missing required file: $filePath"
+        throw "Release output is missing core file: $filePath"
     }
+}
+
+$expectedPackageEntries = @(
+    Get-ChildItem -Path $releaseOutputDirectory -File | Where-Object {
+        $extension = $_.Extension.ToLowerInvariant()
+        $excludedPackageExtensions -notcontains $extension
+    } | Select-Object -ExpandProperty Name
+)
+
+if ($expectedPackageEntries.Count -lt 1)
+{
+    throw "Release output did not produce any package entries."
 }
 
 if (-not (Test-Path -Path $repoManifestPath -PathType Leaf))
@@ -96,18 +107,31 @@ $zip = [System.IO.Compression.ZipFile]::OpenRead($distPackagePath)
 try
 {
     $entryNames = @($zip.Entries | ForEach-Object { $_.FullName })
-    foreach ($requiredFile in $requiredPackageFiles)
-    {
-        if (-not ($entryNames -contains $requiredFile))
-        {
-            throw "dist/Arcade.zip is missing required file '$requiredFile'."
-        }
-    }
 
     $nestedEntries = @($entryNames | Where-Object { $_ -match "[\\/]" })
     if ($nestedEntries.Count -gt 0)
     {
         throw "dist/Arcade.zip should place files at zip root. Nested entries found: $($nestedEntries -join ', ')"
+    }
+
+    $missingEntries = @($expectedPackageEntries | Where-Object { $entryNames -notcontains $_ })
+    if ($missingEntries.Count -gt 0)
+    {
+        throw "dist/Arcade.zip is missing files from release output: $($missingEntries -join ', ')"
+    }
+
+    $unexpectedEntries = @($entryNames | Where-Object { $expectedPackageEntries -notcontains $_ })
+    if ($unexpectedEntries.Count -gt 0)
+    {
+        throw "dist/Arcade.zip has unexpected files not present in release output: $($unexpectedEntries -join ', ')"
+    }
+
+    foreach ($coreFile in $corePackageFiles)
+    {
+        if (-not ($entryNames -contains $coreFile))
+        {
+            throw "dist/Arcade.zip is missing core file '$coreFile'."
+        }
     }
 
     $manifestEntry = $zip.Entries | Where-Object { $_.FullName -eq "Arcade.json" } | Select-Object -First 1

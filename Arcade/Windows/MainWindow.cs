@@ -11,6 +11,10 @@ namespace Arcade.Windows;
 
 public class MainWindow : Window, IDisposable
 {
+    private const float HeaderActionButtonWidth = 118.0f;
+    private const float SidebarExpandedWidth = 190.0f;
+    private const float SidebarCollapsedWidth = 56.0f;
+
     private readonly Plugin plugin;
     private readonly IArcadeModule[] modules;
     private int activeModuleIndex;
@@ -47,20 +51,7 @@ public class MainWindow : Window, IDisposable
 
     public override void Draw()
     {
-        ImGui.Text("Arcade");
-        ImGui.SameLine();
-        if (ImGui.Button("Settings"))
-        {
-            plugin.ToggleConfigUi();
-        }
-
-        ImGui.SameLine();
-        if (ImGui.Button("Account Stats"))
-        {
-            plugin.ToggleAccountStatsUi();
-        }
-
-        ImGui.Separator();
+        DrawShellHeader();
 
         using var layout = ImRaii.Child("ArcadeLayout", Vector2.Zero, true);
         if (!layout.Success)
@@ -68,7 +59,7 @@ public class MainWindow : Window, IDisposable
             return;
         }
 
-        var sidebarWidth = (isSidebarCollapsed ? 44.0f : 190.0f) * ImGuiHelpers.GlobalScale;
+        var sidebarWidth = (isSidebarCollapsed ? SidebarCollapsedWidth : SidebarExpandedWidth) * ImGuiHelpers.GlobalScale;
         using (var sidebar = ImRaii.Child("ArcadeSidebar", new Vector2(sidebarWidth, 0), true))
         {
             if (!sidebar.Success)
@@ -76,35 +67,52 @@ public class MainWindow : Window, IDisposable
                 return;
             }
 
-            var toggleLabel = isSidebarCollapsed ? ">>" : "<<";
-            if (ImGui.Button(toggleLabel))
-            {
-                isSidebarCollapsed = !isSidebarCollapsed;
-            }
-
-            if (!isSidebarCollapsed)
-            {
-                ImGui.SameLine();
-                ImGui.Text("Modules");
-            }
-
-            ImGui.Separator();
-
             for (var i = 0; i < modules.Length; i++)
             {
                 var isSelected = i == activeModuleIndex;
                 var label = isSidebarCollapsed ? (i + 1).ToString() : modules[i].Name;
-                if (ImGui.Selectable(label, isSelected))
+                if (isSelected)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Header, new Vector4(0.24f, 0.38f, 0.62f, 0.90f));
+                    ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new Vector4(0.28f, 0.44f, 0.70f, 0.95f));
+                    ImGui.PushStyleColor(ImGuiCol.HeaderActive, new Vector4(0.22f, 0.36f, 0.56f, 1.0f));
+                }
+
+                var selectableWidth = MathF.Max(1.0f, ImGui.GetContentRegionAvail().X);
+                if (ImGui.Selectable(label, isSelected, ImGuiSelectableFlags.None, new Vector2(selectableWidth, 0.0f)))
                 {
                     activeModuleIndex = i;
                 }
 
-                if (isSidebarCollapsed && ImGui.IsItemHovered())
+                if (isSelected)
+                {
+                    ImGui.PopStyleColor(3);
+                }
+
+                if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
                     ImGui.Text(modules[i].Name);
                     ImGui.EndTooltip();
                 }
+            }
+
+            var toggleLabel = isSidebarCollapsed ? ">>" : "<<";
+            var toggleTooltip = isSidebarCollapsed ? "Expand module list" : "Collapse module list";
+            var remainingHeight = ImGui.GetContentRegionAvail().Y - ImGui.GetFrameHeight();
+            if (remainingHeight > 0.0f)
+            {
+                ImGui.Dummy(new Vector2(0.0f, remainingHeight));
+            }
+
+            if (ImGui.Button(toggleLabel, new Vector2(-1.0f, 0.0f)))
+            {
+                isSidebarCollapsed = !isSidebarCollapsed;
+            }
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip(toggleTooltip);
             }
         }
 
@@ -117,6 +125,31 @@ public class MainWindow : Window, IDisposable
                 DrawActiveModuleSafely();
             }
         }
+    }
+
+    private void DrawShellHeader()
+    {
+        var style = ImGui.GetStyle();
+        var buttonWidth = HeaderActionButtonWidth * ImGuiHelpers.GlobalScale;
+        var actionsWidth = (buttonWidth * 2.0f) + style.ItemSpacing.X;
+
+        ImGui.AlignTextToFramePadding();
+        ImGui.Text("Arcade");
+
+        var rightStartX = MathF.Max(ImGui.GetCursorPosX() + style.ItemSpacing.X, ImGui.GetWindowContentRegionMax().X - actionsWidth);
+        ImGui.SameLine(rightStartX);
+        if (ImGui.Button("Settings", new Vector2(buttonWidth, 0.0f)))
+        {
+            plugin.ToggleConfigUi();
+        }
+
+        ImGui.SameLine();
+        if (ImGui.Button("Account Stats", new Vector2(buttonWidth, 0.0f)))
+        {
+            plugin.ToggleAccountStatsUi();
+        }
+
+        ImGui.Separator();
     }
 
     private void DrawActiveModuleSafely()

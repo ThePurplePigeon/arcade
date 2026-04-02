@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using Arcade.Games.Minesweeper;
 using Arcade.Stats;
+using Arcade.Ui;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 
@@ -9,11 +10,18 @@ namespace Arcade.Modules;
 
 public sealed class MinesweeperModule : IArcadeModule
 {
-    private const int MinBoardSide = 5;
-    private const int MaxBoardWidth = 60;
-    private const int MaxBoardHeight = 40;
+    private const float StepperButtonWidth = 26.0f;
+    private const float StepperValueWidth = 52.0f;
+    private const float HeaderActionButtonWidth = 106.0f;
     private const float AdjacentNumberTextScale = 1.25f;
     private static readonly string[] AdjacentMineText = ["", "1", "2", "3", "4", "5", "6", "7", "8"];
+    private static readonly DifficultyPreset[] PresetOptions =
+    [
+        DifficultyPreset.Beginner,
+        DifficultyPreset.Intermediate,
+        DifficultyPreset.Expert,
+        DifficultyPreset.Custom,
+    ];
 
     private readonly IAccountStatsService accountStatsService;
     private readonly uint[] numberColorsU32;
@@ -22,7 +30,6 @@ public sealed class MinesweeperModule : IArcadeModule
     private int customWidth;
     private int customHeight;
     private int customMines;
-    private string? validationMessage;
 
     public MinesweeperModule(IAccountStatsService accountStatsService)
     {
@@ -56,95 +63,100 @@ public sealed class MinesweeperModule : IArcadeModule
 
     public void Draw()
     {
-        ImGui.Text("Minesweeper");
+        DrawHeaderRow();
+        ArcadeUi.DrawCompactStatusRow(
+            ("State", FormatState(game.State)),
+            ("Board", $"{game.Settings.Width}x{game.Settings.Height}"),
+            ("Mines", $"{game.RemainingMinesEstimate}/{game.Settings.MineCount}"),
+            ("Time", TimeText.FormatElapsedCompact(game.Elapsed)),
+            ("Revealed", $"{game.RevealedSafeTileCount}/{game.Board.SafeTileCount}"),
+            ("Flags", game.FlaggedTileCount.ToString()));
+
         DrawGameConfiguration();
         ImGui.Separator();
-        ImGui.Text($"State: {game.State}");
-        ImGui.Text($"Board: {game.Settings.Width} x {game.Settings.Height}");
-        ImGui.Text($"Mines (total): {game.Settings.MineCount}");
-        ImGui.SameLine();
-        ImGui.Text($"Mines (remaining): {game.RemainingMinesEstimate}");
-        ImGui.Text($"Time: {TimeText.FormatElapsedCompact(game.Elapsed)}");
-        ImGui.Text($"Revealed safe tiles: {game.RevealedSafeTileCount}/{game.Board.SafeTileCount}");
-        ImGui.Text($"Flags placed: {game.FlaggedTileCount}");
+        DrawBoard();
+        ArcadeUi.DrawSecondaryText("Left click to reveal, right click to flag, middle click to chord-reveal.");
+    }
 
-        if (ImGui.Button("Restart Current Board"))
+    private void DrawHeaderRow()
+    {
+        ImGui.Text("Minesweeper");
+
+        var style = ImGui.GetStyle();
+        var actionsWidth = (HeaderActionButtonWidth * 2.0f) + style.ItemSpacing.X;
+        var startX = MathF.Max(
+            ImGui.GetCursorPosX() + style.ItemSpacing.X,
+            ImGui.GetWindowContentRegionMax().X - actionsWidth);
+
+        ImGui.SameLine(startX);
+        if (ImGui.Button("New Game", new Vector2(HeaderActionButtonWidth, 0.0f)))
+        {
+            ReplaceGame(game.Settings);
+            SyncCustomInputsFromCurrentGame();
+        }
+
+        ImGui.SameLine();
+        if (ImGui.Button("Reset Board", new Vector2(HeaderActionButtonWidth, 0.0f)))
         {
             game.Reset();
         }
-
-        ImGui.Separator();
-        DrawBoard();
     }
 
     private void DrawGameConfiguration()
     {
-        ImGui.Text("Game Configuration");
-
-        if (ImGui.RadioButton("Beginner (9x9, 10)", selectedPreset == DifficultyPreset.Beginner) &&
-            selectedPreset != DifficultyPreset.Beginner)
-        {
-            selectedPreset = DifficultyPreset.Beginner;
-            ApplySelectedPreset();
-        }
-
+        ArcadeUi.DrawSectionLabel("Setup");
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextDisabled("Preset");
         ImGui.SameLine();
-        if (ImGui.RadioButton("Intermediate (16x16, 40)", selectedPreset == DifficultyPreset.Intermediate) &&
-            selectedPreset != DifficultyPreset.Intermediate)
+        ImGui.SetNextItemWidth(220.0f);
+        if (ImGui.BeginCombo("##MinesweeperPreset", FormatPreset(selectedPreset)))
         {
-            selectedPreset = DifficultyPreset.Intermediate;
-            ApplySelectedPreset();
-        }
-
-        ImGui.SameLine();
-        if (ImGui.RadioButton("Expert (30x16, 99)", selectedPreset == DifficultyPreset.Expert) &&
-            selectedPreset != DifficultyPreset.Expert)
-        {
-            selectedPreset = DifficultyPreset.Expert;
-            ApplySelectedPreset();
-        }
-
-        if (ImGui.RadioButton("Custom", selectedPreset == DifficultyPreset.Custom))
-        {
-            selectedPreset = DifficultyPreset.Custom;
-            validationMessage = null;
-            SyncCustomInputsFromCurrentGame();
-        }
-
-        if (selectedPreset == DifficultyPreset.Custom)
-        {
-            ImGui.PushItemWidth(100);
-            if (ImGui.InputInt("Width", ref customWidth))
+            foreach (var option in PresetOptions)
             {
-                validationMessage = null;
+                var isSelected = option == selectedPreset;
+                if (ImGui.Selectable(FormatPreset(option), isSelected))
+                {
+                    if (option != selectedPreset)
+                    {
+                        selectedPreset = option;
+                        if (selectedPreset == DifficultyPreset.Custom)
+                        {
+                            SyncCustomInputsFromCurrentGame();
+                        }
+                        else
+                        {
+                            ApplySelectedPreset();
+                        }
+                    }
+                }
+
+                if (isSelected)
+                {
+                    ImGui.SetItemDefaultFocus();
+                }
             }
 
-            if (ImGui.InputInt("Height", ref customHeight))
-            {
-                validationMessage = null;
-            }
-
-            if (ImGui.InputInt("Mines", ref customMines))
-            {
-                validationMessage = null;
-            }
-
-            ImGui.PopItemWidth();
-
-            var safeWidth = Math.Clamp(customWidth, MinBoardSide, MaxBoardWidth);
-            var safeHeight = Math.Clamp(customHeight, MinBoardSide, MaxBoardHeight);
-            var maxCustomMines = Math.Max(0L, ((long)safeWidth * safeHeight) - 1);
-            ImGui.TextDisabled($"Valid ranges: Width {MinBoardSide}-{MaxBoardWidth}, Height {MinBoardSide}-{MaxBoardHeight}, Mines 0-{maxCustomMines}");
-
-            if (ImGui.Button("Apply Custom + New Game"))
-            {
-                ApplyCustomSettings();
-            }
+            ImGui.EndCombo();
         }
 
-        if (!string.IsNullOrEmpty(validationMessage))
+        if (selectedPreset != DifficultyPreset.Custom)
         {
-            ImGui.TextColored(new Vector4(0.95f, 0.30f, 0.30f, 1.0f), validationMessage);
+            return;
+        }
+
+        DrawCustomStepper("Width", ref customWidth, MinesweeperCustomSettingsNormalizer.MinBoardSide, MinesweeperCustomSettingsNormalizer.MaxBoardWidth);
+        DrawCustomStepper("Height", ref customHeight, MinesweeperCustomSettingsNormalizer.MinBoardSide, MinesweeperCustomSettingsNormalizer.MaxBoardHeight);
+
+        NormalizeCustomInputs();
+        var maxCustomMines = MinesweeperCustomSettingsNormalizer.GetMaxMineCount(customWidth, customHeight);
+        DrawCustomStepper("Mines", ref customMines, 0, maxCustomMines);
+        NormalizeCustomInputs();
+
+        ArcadeUi.DrawSecondaryText($"Ranges: Width {MinesweeperCustomSettingsNormalizer.MinBoardSide}-{MinesweeperCustomSettingsNormalizer.MaxBoardWidth}, Height {MinesweeperCustomSettingsNormalizer.MinBoardSide}-{MinesweeperCustomSettingsNormalizer.MaxBoardHeight}, Mines 0-{maxCustomMines}");
+
+        if (ImGui.Button("Apply Custom + New Game"))
+        {
+            ApplyCustomSettings();
         }
     }
 
@@ -320,7 +332,6 @@ public sealed class MinesweeperModule : IArcadeModule
 
     private void ApplySelectedPreset()
     {
-        validationMessage = null;
         var settings = selectedPreset switch
         {
             DifficultyPreset.Beginner => MinesweeperGameSettings.Beginner,
@@ -340,31 +351,60 @@ public sealed class MinesweeperModule : IArcadeModule
 
     private void ApplyCustomSettings()
     {
-        validationMessage = null;
-
-        customWidth = Math.Clamp(customWidth, MinBoardSide, MaxBoardWidth);
-        customHeight = Math.Clamp(customHeight, MinBoardSide, MaxBoardHeight);
-
-        var maxMines = (customWidth * customHeight) - 1;
-        customMines = Math.Clamp(customMines, 0, maxMines);
-
-        try
-        {
-            var customSettings = new MinesweeperGameSettings(customWidth, customHeight, customMines);
-            ReplaceGame(customSettings);
-            SyncCustomInputsFromCurrentGame();
-        }
-        catch (ArgumentOutOfRangeException ex)
-        {
-            validationMessage = ex.Message;
-        }
+        var normalized = NormalizeCustomInputs();
+        var customSettings = new MinesweeperGameSettings(normalized.Width, normalized.Height, normalized.MineCount);
+        ReplaceGame(customSettings);
+        SyncCustomInputsFromCurrentGame();
     }
 
     private void SyncCustomInputsFromCurrentGame()
     {
-        customWidth = game.Settings.Width;
-        customHeight = game.Settings.Height;
-        customMines = game.Settings.MineCount;
+        var normalized = MinesweeperCustomSettingsNormalizer.Normalize(
+            game.Settings.Width,
+            game.Settings.Height,
+            game.Settings.MineCount);
+        customWidth = normalized.Width;
+        customHeight = normalized.Height;
+        customMines = normalized.MineCount;
+    }
+
+    private MinesweeperCustomSettings NormalizeCustomInputs()
+    {
+        var normalized = MinesweeperCustomSettingsNormalizer.Normalize(customWidth, customHeight, customMines);
+        customWidth = normalized.Width;
+        customHeight = normalized.Height;
+        customMines = normalized.MineCount;
+        return normalized;
+    }
+
+    private static void DrawCustomStepper(string label, ref int value, int minValue, int maxValue)
+    {
+        ImGui.AlignTextToFramePadding();
+        ImGui.TextDisabled(label);
+        ImGui.SameLine();
+        ImGui.PushID(label);
+
+        ImGui.BeginDisabled(value <= minValue);
+        if (ImGui.Button("-", new Vector2(StepperButtonWidth, 0)))
+        {
+            value--;
+        }
+
+        ImGui.EndDisabled();
+        ImGui.SameLine();
+        ImGui.BeginDisabled();
+        ImGui.Button(value.ToString(), new Vector2(StepperValueWidth, 0));
+        ImGui.EndDisabled();
+        ImGui.SameLine();
+
+        ImGui.BeginDisabled(value >= maxValue);
+        if (ImGui.Button("+", new Vector2(StepperButtonWidth, 0)))
+        {
+            value++;
+        }
+
+        ImGui.EndDisabled();
+        ImGui.PopID();
     }
 
     private void ReplaceGame(MinesweeperGameSettings settings)
@@ -378,6 +418,28 @@ public sealed class MinesweeperModule : IArcadeModule
     {
         accountStatsService.RecordMinesweeperResult(summary);
         accountStatsService.Save();
+    }
+
+    private static string FormatState(MinesweeperGameState state)
+    {
+        return state switch
+        {
+            MinesweeperGameState.InProgress => "In Progress",
+            MinesweeperGameState.Won => "Won",
+            MinesweeperGameState.Lost => "Lost",
+            _ => "Ready",
+        };
+    }
+
+    private static string FormatPreset(DifficultyPreset preset)
+    {
+        return preset switch
+        {
+            DifficultyPreset.Beginner => "Beginner (9x9, 10)",
+            DifficultyPreset.Intermediate => "Intermediate (16x16, 40)",
+            DifficultyPreset.Expert => "Expert (30x16, 99)",
+            _ => "Custom",
+        };
     }
 
     private enum DifficultyPreset

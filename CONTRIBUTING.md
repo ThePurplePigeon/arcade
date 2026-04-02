@@ -25,6 +25,7 @@ dotnet test .\Arcade.sln -v minimal
 ## Coding Expectations
 
 - Keep gameplay UI mouse-first and avoid adding keyboard-dependent interactions.
+- Gameplay modules are CI-guarded against keyboard-entry ImGui calls (`InputInt`, `InputText`, `InputFloat`, `InputDouble`, `InputScalar`).
 - Preserve existing style and keep changes focused.
 - Add or update tests when behavior changes.
 
